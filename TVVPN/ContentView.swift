@@ -12,6 +12,21 @@ struct ContentView: View {
 
     var body: some View {
         VStack {
+            HStack {
+                Image(systemName: "tv")
+                Text("TV VPN")
+            }
+            .font(.largeTitle)
+            .padding()
+            .background {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 20)
+                        .opacity(0.3)
+                }
+                .foregroundColor(.teal)
+            }
+            
+            Spacer()
             Image(systemName: appModel.connected ? "checkmark.icloud.fill" : "icloud.slash")
                 .font(.system(size: 60))
                 .padding()
@@ -19,10 +34,12 @@ struct ContentView: View {
             Button {
                 appModel.toggleConnection()
             } label: {
-                Text(appModel.connected ? "Disconnect VPN" : "Connect VPN")
+                Text(appModel.connected ? "Disconnect from 🇨🇭" : "Connect to 🇨🇭")
+                    .font(.title)
             }
+            Spacer()
         }
-        .padding()
+        .preferredColorScheme(.dark)
     }
 }
 
