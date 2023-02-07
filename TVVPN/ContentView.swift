@@ -8,12 +8,19 @@
 import SwiftUI
 
 struct ContentView: View {
+    @EnvironmentObject var appModel: AppModel
+
     var body: some View {
         VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundColor(.accentColor)
-            Text("Hello, world!")
+            Image(systemName: appModel.connected ? "checked.icloud.fill" : "icloud.slash")
+                .font(.system(size: 60))
+                .padding()
+            
+            Button {
+                appModel.connected.toggle()
+            } label: {
+                Text(appModel.connected ? "Disconnect VPN" : "Connect VPN")
+            }
         }
         .padding()
     }
@@ -22,5 +29,6 @@ struct ContentView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
+            .environmentObject(AppModel())
     }
 }
