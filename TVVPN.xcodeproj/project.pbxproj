@@ -12,6 +12,7 @@
 		864A001729929D1A004FAFF4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 864A001629929D1A004FAFF4 /* Assets.xcassets */; };
 		864A001A29929D1A004FAFF4 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 864A001929929D1A004FAFF4 /* Preview Assets.xcassets */; };
 		864A00212992A035004FAFF4 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 864A00202992A035004FAFF4 /* AppModel.swift */; };
+		867C689B2992A9AE000D3394 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 867C689A2992A9AE000D3394 /* Alamofire */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				867C689B2992A9AE000D3394 /* Alamofire in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -86,6 +88,9 @@
 			dependencies = (
 			);
 			name = TVVPN;
+			packageProductDependencies = (
+				867C689A2992A9AE000D3394 /* Alamofire */,
+			);
 			productName = TVVPN;
 			productReference = 864A000F29929D1A004FAFF4 /* TVVPN.app */;
 			productType = "com.apple.product-type.application";
@@ -114,6 +119,9 @@
 				Base,
 			);
 			mainGroup = 864A000629929D1A004FAFF4;
+			packageReferences = (
+				867C68992992A9AE000D3394 /* XCRemoteSwiftPackageReference "Alamofire" */,
+			);
 			productRefGroup = 864A001029929D1A004FAFF4 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -343,6 +351,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		867C68992992A9AE000D3394 /* XCRemoteSwiftPackageReference "Alamofire" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.6.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		867C689A2992A9AE000D3394 /* Alamofire */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 867C68992992A9AE000D3394 /* XCRemoteSwiftPackageReference "Alamofire" */;
+			productName = Alamofire;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 864A000729929D1A004FAFF4 /* Project object */;
 }

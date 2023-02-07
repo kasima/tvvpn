@@ -12,12 +12,12 @@ struct ContentView: View {
 
     var body: some View {
         VStack {
-            Image(systemName: appModel.connected ? "checked.icloud.fill" : "icloud.slash")
+            Image(systemName: appModel.connected ? "checkmark.icloud.fill" : "icloud.slash")
                 .font(.system(size: 60))
                 .padding()
             
             Button {
-                appModel.connected.toggle()
+                appModel.toggleConnection()
             } label: {
                 Text(appModel.connected ? "Disconnect VPN" : "Connect VPN")
             }

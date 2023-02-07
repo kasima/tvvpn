@@ -15,6 +15,9 @@ struct TVVPNApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(appModel)
+                .onAppear {
+                    appModel.getStatus()
+                }
         }
     }
 }
