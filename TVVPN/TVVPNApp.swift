@@ -16,7 +16,7 @@ struct TVVPNApp: App {
             ContentView()
                 .environmentObject(appModel)
                 .onAppear {
-                    appModel.getStatus()
+                    appModel.loadStuff()
                 }
         }
     }

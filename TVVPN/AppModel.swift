@@ -15,6 +15,7 @@ final class AppModel: ObservableObject {
     let togglePath = "service.cgi"
 
     let username = "admin"
+    var password = ""
 
     @Published var loading: Bool = false
     @Published var connected: Bool = false
@@ -25,6 +26,29 @@ final class AppModel: ObservableObject {
         let configuration = URLSessionConfiguration.af.default
         return Session(configuration: configuration, serverTrustManager: manager, redirectHandler: redirector)
     }()
+
+    public func loadStuff() {
+        loadPassword()
+        getStatus()
+    }
+
+    private func loadPassword() {
+        let url = Bundle.main.url(forResource: "Secrets", withExtension: "plist")
+        if let path = url?.path, let data = FileManager.default.contents(atPath: path) {
+            do {
+                let plist = try PropertyListSerialization.propertyList(from: data, format: nil)
+                guard let secrets = plist as? [String: String] else {
+                    return
+                }
+                self.password = secrets["password"]!
+                debugPrint(self.password)
+            } catch {
+                print("Error reading regions plist file: \(error)")
+                return
+            }
+            
+        }
+    }
     
     public func getStatus() {
         let parameters: [String: String] = [
@@ -34,12 +58,17 @@ final class AppModel: ObservableObject {
         loading = true
         session.request(routerURL + statusPath, method: .post, parameters: parameters)
             .authenticate(username: username, password: password)
-            .responseString { response in
+            .response { response in
                 debugPrint(response)
 
                 switch response.result {
-                case .success:
-                    self.connected = true
+                case .success(let data):
+                    let statusCode = response.response?.statusCode
+                    if statusCode == 200 {
+                        self.connected = data != nil
+                    } else {
+                        self.connected = false
+                    }
                 case .failure:
                     // When VPN is not connected, response is zero length body, which results in serialization failure
                     self.connected = false
