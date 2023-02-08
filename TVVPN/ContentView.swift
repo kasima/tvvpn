@@ -21,9 +21,15 @@ struct ContentView: View {
             .padding()
 
             Spacer()
-            Image(systemName: appModel.connected ? "checkmark.icloud.fill" : "icloud.slash")
-                .font(.system(size: 60))
-                .padding()
+            
+            if appModel.loading {
+                ProgressView()
+                    .frame(minHeight: 100)
+            } else {
+                Image(systemName: appModel.connected ? "checkmark.icloud.fill" : "icloud.slash")
+                    .font(.system(size: 60))
+                    .frame(minHeight: 100)
+            }
             
             Button {
                 appModel.toggleConnection()
@@ -31,6 +37,7 @@ struct ContentView: View {
                 Text(appModel.connected ? "Disconnect from 🇨🇭" : "Connect to 🇨🇭")
                     .font(.title)
             }
+            .disabled(appModel.loading)
             Spacer()
         }
         .preferredColorScheme(.dark)
@@ -39,7 +46,12 @@ struct ContentView: View {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
-            .environmentObject(AppModel())
+        Group {
+            ContentView()
+                .environmentObject(AppModel())
+            
+            ContentView()
+                .environmentObject(AppModel(loading: false, connected: true))
+       }
     }
 }

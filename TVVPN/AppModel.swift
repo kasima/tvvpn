@@ -17,8 +17,8 @@ final class AppModel: ObservableObject {
     let username = "admin"
     var password = ""
 
-    @Published var loading: Bool = false
-    @Published var connected: Bool = false
+    @Published var loading: Bool
+    @Published var connected: Bool
     
     private let session: Session = {
         let manager = ServerTrustManager(evaluators: ["192.168.1.1": DisabledTrustEvaluator()])
@@ -26,6 +26,11 @@ final class AppModel: ObservableObject {
         let configuration = URLSessionConfiguration.af.default
         return Session(configuration: configuration, serverTrustManager: manager, redirectHandler: redirector)
     }()
+    
+    init(loading: Bool = true, connected: Bool = false) {
+        self.loading = loading
+        self.connected = connected
+    }
 
     public func loadStuff() {
         loadPassword()
@@ -65,19 +70,20 @@ final class AppModel: ObservableObject {
                 case .success(let data):
                     let statusCode = response.response?.statusCode
                     if statusCode == 200 {
+                        // When VPN is not connected, response is nil body
                         self.connected = data != nil
                     } else {
                         self.connected = false
                     }
                 case .failure:
-                    // When VPN is not connected, response is zero length body, which results in serialization failure
-                    self.connected = false
+                    debugPrint("Error")
                 }
                 self.loading = false
             }
     }
     
     public func toggleConnection() {
+        loading = true
         let parameters: [String: String] = [
             // "_redirect": "vpn-client.asp",
             // "_sleep": "3",
@@ -98,6 +104,7 @@ final class AppModel: ObservableObject {
                 case .failure:
                     debugPrint("Error")
                 }
+                self.loading = false
             }
     }
 }
