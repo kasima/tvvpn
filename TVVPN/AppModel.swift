@@ -10,7 +10,6 @@ import Alamofire
 
 final class AppModel: ObservableObject {
     let routerURL = "https://192.168.1.1/"
-    let loginPath = "login"
     let statusPath = "vpnstatus.cgi"
     let togglePath = "service.cgi"
 
@@ -57,8 +56,9 @@ final class AppModel: ObservableObject {
     
     public func getStatus() {
         let parameters: [String: String] = [
-            "client": "1",
-            "_http_id": "TIDedd63e08e80c7be2"
+            // TODO – pull this session ID from somewhere
+            "_http_id": "TIDedd63e08e80c7be2",
+            "client": "1"
         ]
         loading = true
         session.request(routerURL + statusPath, method: .post, parameters: parameters)
@@ -87,8 +87,8 @@ final class AppModel: ObservableObject {
         let parameters: [String: String] = [
             // "_redirect": "vpn-client.asp",
             // "_sleep": "3",
-            "_service": self.connected ? "vpnclient1-stop" : "vpnclient1-start",
-            "_http_id": "TIDedd63e08e80c7be2"
+            "_http_id": "TIDedd63e08e80c7be2",
+            "_service": self.connected ? "vpnclient1-stop" : "vpnclient1-start"
         ]
         session.request(routerURL + togglePath, method: .post, parameters: parameters)
             .authenticate(username: username, password: password)
