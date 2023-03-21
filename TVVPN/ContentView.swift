@@ -33,6 +33,19 @@ struct ContentView: View {
                     Image(systemName: appModel.connected ? "checkmark.icloud.fill" : "icloud.slash")
                         .font(.system(size: 60))
                         .frame(minHeight: 100)
+
+                    if appModel.connected {
+                        if appModel.serverAddress == "" {
+                            Text("Connected")
+                                .font(.caption)
+                        } else {
+                            Text("Connected to \(appModel.serverAddress)")
+                                .font(.caption)
+                        }
+                    } else {
+                        Text("Not connected")
+                            .font(.caption)
+                    }
                 }
 
                 Button(action: {

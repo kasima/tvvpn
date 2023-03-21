@@ -10,14 +10,19 @@ import Alamofire
 
 final class AppModel: ObservableObject {
     let routerURL = "https://192.168.1.1/"
+    let vpnClientPath = "vpn-client.asp"
+    let nvramUpdatePath = "tomato.cgi"
     let statusPath = "vpnstatus.cgi"
     let togglePath = "service.cgi"
+
+    let countryId = 209  // Switzerland
 
     let username = "admin"
     var password = ""
 
     @Published var loading: Bool
     @Published var connected: Bool
+    @Published var serverAddress = ""
     
     private let session: Session = {
         let manager = ServerTrustManager(evaluators: ["192.168.1.1": DisabledTrustEvaluator()])
@@ -81,16 +86,53 @@ final class AppModel: ObservableObject {
                 self.loading = false
             }
     }
-    
-    public func toggleConnection() {
-        loading = true
+
+    public func getSuggestedServer(completion: @escaping (String?) -> Void) {
+        let url = "https://api.nordvpn.com/v1/servers/recommendations?filters[country_id]=\(countryId)&limit=1"
+        AF.request(url).responseData { response in
+            switch response.result {
+            case .success(let data):
+                do {
+                    if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]],
+                       let serverAddress = json.first?["hostname"] as? String {
+                        completion(serverAddress)
+                    } else {
+                        completion(nil)
+                    }
+                } catch {
+                    completion(nil)
+                }
+            case .failure:
+                completion(nil)
+            }
+        }
+    }
+
+    public func updateVPNClientAddress(serverAddress: String, completion: @escaping (Bool) -> Void) {
+        // Replace this with the appropriate API call to update the server address for the VPN client
+        let url = routerURL + nvramUpdatePath
         let parameters: [String: String] = [
-            // "_redirect": "vpn-client.asp",
-            // "_sleep": "3",
-            "_http_id": "TIDedd63e08e80c7be2",
-            "_service": self.connected ? "vpnclient1-stop" : "vpnclient1-start"
+            "_ajax": "1",
+            "vpn_client1_addr": serverAddress,
+            "_http_id": "TIDedd63e08e80c7be2"
         ]
-        session.request(routerURL + togglePath, method: .post, parameters: parameters)
+        session.request(url, method: .post, parameters: parameters)
+            .authenticate(username: username, password: password)
+            .response { response in
+                if response.error == nil {
+                    completion(true)
+                } else {
+                    completion(false)
+                }
+            }
+    }
+
+    public func vpnConnection(start: Bool) {
+        let toggleParameters: [String: String] = [
+            "_http_id": "TIDedd63e08e80c7be2",
+            "_service": start ? "vpnclient1-start" : "vpnclient1-stop"
+        ]
+        session.request(routerURL + togglePath, method: .post, parameters: toggleParameters)
             .authenticate(username: username, password: password)
             .responseString { response in
                 debugPrint(response)
@@ -107,5 +149,55 @@ final class AppModel: ObservableObject {
                 self.loading = false
             }
     }
+
+    public func toggleConnection() {
+        loading = true
+        if !connected {
+            getSuggestedServer { serverAddress in
+                guard let serverAddress = serverAddress else {
+                    debugPrint("Error fetching suggested server")
+                    self.loading = false
+                    return
+                }
+                self.serverAddress = serverAddress
+                self.updateVPNClientAddress(serverAddress: serverAddress) { success in
+                    if success {
+                        self.vpnConnection(start: true)
+                    } else {
+                        debugPrint("Error updating server address")
+                        self.loading = false
+                    }
+                }
+            }
+        } else {
+            self.vpnConnection(start: false)
+        }
+    }
+
+    // public func toggleConnection() {
+    //     loading = true
+    //     let parameters: [String: String] = [
+    //         // "_redirect": "vpn-client.asp",
+    //         // "_sleep": "3",
+    //         "_http_id": "TIDedd63e08e80c7be2",
+    //         "_service": self.connected ? "vpnclient1-stop" : "vpnclient1-start"
+    //     ]
+    //     session.request(routerURL + togglePath, method: .post, parameters: parameters)
+    //         .authenticate(username: username, password: password)
+    //         .responseString { response in
+    //             debugPrint(response)
+    //
+    //             switch response.result {
+    //             case .success:
+    //                 let statusCode = response.response?.statusCode
+    //                 if statusCode == 302 {
+    //                     self.connected = !self.connected
+    //                 }
+    //             case .failure:
+    //                 debugPrint("Error")
+    //             }
+    //             self.loading = false
+    //         }
+    // }
 
 }
