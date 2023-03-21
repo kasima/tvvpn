@@ -110,7 +110,7 @@ final class AppModel: ObservableObject {
         return response.value ?? ""
     }
 
-    public func getSuggestedServer() async throws -> String {
+    public func getSuggestedServer() async throws -> String? {
         let url = "https://api.nordvpn.com/v1/servers/recommendations?filters[country_id]=\(countryId)&limit=1"
         let request = AF.request(url).serializingData()
         let response = await request.response
@@ -119,12 +119,11 @@ final class AppModel: ObservableObject {
             if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]],
                let serverAddress = json.first?["hostname"] as? String {
                 return serverAddress
-            } else {
-                return ""
             }
         case .failure:
-            return ""
+            debugPrint("error")
         }
+        return nil
     }
 
     public func updateVPNClientAddress(serverAddress: String) async throws {
@@ -140,13 +139,13 @@ final class AppModel: ObservableObject {
         let response = await request.response
         switch response.result {
         case .success:
-            print("Successfully updated")
+            return
         case .failure:
             throw NSError(domain: "getVPNClientParameters", code: -1, userInfo: nil)
         }
     }
 
-    public func vpnConnection(start: Bool) async throws -> Bool {
+    public func vpnConnection(start: Bool) async throws {
         let toggleParameters: [String: String] = [
             "_http_id": httpID,
             "_service": start ? "vpnclient1-start" : "vpnclient1-stop"
@@ -159,14 +158,14 @@ final class AppModel: ObservableObject {
 
         switch response.result {
         case .success:
-            let statusCode = response.response?.statusCode
-            if statusCode == 302 {
-                return true
+            if let statusCode = response.response?.statusCode, statusCode == 302 {
+                // redirect means success
+                return
             }
         case .failure:
             debugPrint("Error")
         }
-        return false
+        throw NSError(domain: "vpnConnection", code: -1, userInfo: nil)
     }
 
     public func toggleConnection() {
@@ -175,11 +174,15 @@ final class AppModel: ObservableObject {
         Task { @MainActor in
             do {
                 if !connected {
-                    self.serverAddress = try await self.getSuggestedServer()
-                    try await self.updateVPNClientAddress(serverAddress: self.serverAddress)
-                    self.connected = try await self.vpnConnection(start: true)
+                    if let suggestedServer = try await self.getSuggestedServer() {
+                        self.serverAddress = suggestedServer
+                        try await self.updateVPNClientAddress(serverAddress: self.serverAddress)
+                    }
+                    try await self.vpnConnection(start: true)
+                    self.connected = true
                 } else {
-                    self.connected = try await !self.vpnConnection(start: false)
+                    try await self.vpnConnection(start: false)
+                    self.connected = false
                 }
             } catch {
                 debugPrint(error)
