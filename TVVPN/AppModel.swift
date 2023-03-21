@@ -10,10 +10,13 @@ import Alamofire
 
 final class AppModel: ObservableObject {
     let routerURL = "https://192.168.1.1/"
-    let vpnClientPath = "vpn-client.asp"
-    let nvramUpdatePath = "tomato.cgi"
     let statusPath = "vpnstatus.cgi"
+    let shellPath = "shell.cgi"
+    let nvramUpdatePath = "tomato.cgi"
     let togglePath = "service.cgi"
+
+    // TODO – pull this session ID from the source in the script section: nvram["_http_id"]
+    let httpID = "TIDedd63e08e80c7be2"
 
     let countryId = 209  // Switzerland
 
@@ -39,6 +42,7 @@ final class AppModel: ObservableObject {
     public func loadStuff() {
         loadPassword()
         getStatus()
+        getServer()
     }
 
     private func loadPassword() {
@@ -62,7 +66,7 @@ final class AppModel: ObservableObject {
     public func getStatus() {
         let parameters: [String: String] = [
             // TODO – pull this session ID from the source in the script section: nvram["_http_id"]
-            "_http_id": "TIDedd63e08e80c7be2",
+            "_http_id": httpID,
             "client": "1"
         ]
         loading = true
@@ -80,6 +84,30 @@ final class AppModel: ObservableObject {
                     } else {
                         self.connected = false
                     }
+                case .failure:
+                    debugPrint("Error")
+                }
+                self.loading = false
+            }
+    }
+
+    public func getServer() {
+        let parameters: [String: String] = [
+            "_http_id": httpID,
+            "action": "execute",
+            "nojs": "1",
+            "working_dir": "/www",
+            "command": "nvram get vpn_client1_addr"
+        ]
+        loading = true
+        session.request(routerURL + shellPath, method: .post, parameters: parameters)
+            .authenticate(username: username, password: password)
+            .responseString { response in
+                debugPrint(response)
+
+                switch response.result {
+                case .success(let body):
+                    self.serverAddress = body
                 case .failure:
                     debugPrint("Error")
                 }
@@ -114,7 +142,7 @@ final class AppModel: ObservableObject {
         let parameters: [String: String] = [
             "_ajax": "1",
             "vpn_client1_addr": serverAddress,
-            "_http_id": "TIDedd63e08e80c7be2"
+            "_http_id": httpID
         ]
         session.request(url, method: .post, parameters: parameters)
             .authenticate(username: username, password: password)
@@ -129,7 +157,7 @@ final class AppModel: ObservableObject {
 
     public func vpnConnection(start: Bool) {
         let toggleParameters: [String: String] = [
-            "_http_id": "TIDedd63e08e80c7be2",
+            "_http_id": httpID,
             "_service": start ? "vpnclient1-start" : "vpnclient1-stop"
         ]
         session.request(routerURL + togglePath, method: .post, parameters: toggleParameters)
@@ -179,7 +207,7 @@ final class AppModel: ObservableObject {
     //     let parameters: [String: String] = [
     //         // "_redirect": "vpn-client.asp",
     //         // "_sleep": "3",
-    //         "_http_id": "TIDedd63e08e80c7be2",
+    //         "_http_id": httpID,
     //         "_service": self.connected ? "vpnclient1-stop" : "vpnclient1-start"
     //     ]
     //     session.request(routerURL + togglePath, method: .post, parameters: parameters)

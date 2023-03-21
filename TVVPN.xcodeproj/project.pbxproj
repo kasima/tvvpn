@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		86009D2D29C9D89D0045AFF3 /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = 86009D2C29C9D89D0045AFF3 /* SwiftSoup */; };
 		864A001329929D1A004FAFF4 /* TVVPNApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 864A001229929D1A004FAFF4 /* TVVPNApp.swift */; };
 		864A001529929D1A004FAFF4 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 864A001429929D1A004FAFF4 /* ContentView.swift */; };
 		864A001729929D1A004FAFF4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 864A001629929D1A004FAFF4 /* Assets.xcassets */; };
@@ -33,7 +32,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				867C689B2992A9AE000D3394 /* Alamofire in Frameworks */,
-				86009D2D29C9D89D0045AFF3 /* SwiftSoup in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -95,7 +93,6 @@
 			name = TVVPN;
 			packageProductDependencies = (
 				867C689A2992A9AE000D3394 /* Alamofire */,
-				86009D2C29C9D89D0045AFF3 /* SwiftSoup */,
 			);
 			productName = TVVPN;
 			productReference = 864A000F29929D1A004FAFF4 /* TVVPN.app */;
@@ -127,7 +124,6 @@
 			mainGroup = 864A000629929D1A004FAFF4;
 			packageReferences = (
 				867C68992992A9AE000D3394 /* XCRemoteSwiftPackageReference "Alamofire" */,
-				86009D2B29C9D89D0045AFF3 /* XCRemoteSwiftPackageReference "SwiftSoup" */,
 			);
 			productRefGroup = 864A001029929D1A004FAFF4 /* Products */;
 			projectDirPath = "";
@@ -365,14 +361,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		86009D2B29C9D89D0045AFF3 /* XCRemoteSwiftPackageReference "SwiftSoup" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/scinfu/SwiftSoup";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.0.0;
-			};
-		};
 		867C68992992A9AE000D3394 /* XCRemoteSwiftPackageReference "Alamofire" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
@@ -384,11 +372,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		86009D2C29C9D89D0045AFF3 /* SwiftSoup */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 86009D2B29C9D89D0045AFF3 /* XCRemoteSwiftPackageReference "SwiftSoup" */;
-			productName = SwiftSoup;
-		};
 		867C689A2992A9AE000D3394 /* Alamofire */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 867C68992992A9AE000D3394 /* XCRemoteSwiftPackageReference "Alamofire" */;
