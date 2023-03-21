@@ -40,8 +40,19 @@ final class AppModel: ObservableObject {
     }
 
     public func loadStuff() {
+        self.loading = true
         loadPassword()
-        getStatus()
+
+        Task { @MainActor in
+            do {
+                self.connected = try await getStatus()
+                self.serverAddress = try await getServer()
+            } catch {
+                debugPrint("Error: \(error)")
+
+            }
+            self.loading = false
+        }
     }
 
     private func loadPassword() {
@@ -61,37 +72,28 @@ final class AppModel: ObservableObject {
             
         }
     }
-    
-    public func getStatus() {
+
+    public func getStatus() async throws -> Bool {
         let parameters: [String: String] = [
-            // TODO – pull this session ID from the source in the script section: nvram["_http_id"]
             "_http_id": httpID,
             "client": "1"
         ]
-        loading = true
-        session.request(routerURL + statusPath, method: .post, parameters: parameters)
+        let request = session.request(routerURL + statusPath, method: .post, parameters: parameters)
             .authenticate(username: username, password: password)
-            .response { response in
-                debugPrint(response)
+            .serializingString()
+        let response = await request.response
+        debugPrint(response)
 
-                switch response.result {
-                case .success(let data):
-                    let statusCode = response.response?.statusCode
-                    if statusCode == 200 {
-                        // When VPN is not connected, response is nil body
-                        self.connected = data != nil
-                        self.getServer()
-                    } else {
-                        self.connected = false
-                    }
-                case .failure:
-                    debugPrint("Error")
-                }
-                self.loading = false
-            }
+        let statusCode = response.response?.statusCode
+        if statusCode == 200 {
+            // When VPN is not connected, response is nil body
+            return response.data != nil
+        } else {
+            return false
+        }
     }
 
-    public func getServer() {
+    public func getServer() async throws -> String {
         let parameters: [String: String] = [
             "_http_id": httpID,
             "action": "execute",
@@ -99,20 +101,13 @@ final class AppModel: ObservableObject {
             "working_dir": "/www",
             "command": "nvram get vpn_client1_addr"
         ]
-        loading = true
-        session.request(routerURL + shellPath, method: .post, parameters: parameters)
+        let request = session.request(routerURL + shellPath, method: .post, parameters: parameters)
             .authenticate(username: username, password: password)
-            .responseString { response in
-                debugPrint(response)
+            .serializingString()
+        let response = await request.response
+        debugPrint(response)
 
-                switch response.result {
-                case .success(let body):
-                    self.serverAddress = body
-                case .failure:
-                    debugPrint("Error")
-                }
-                self.loading = false
-            }
+        return response.value ?? ""
     }
 
     public func getSuggestedServer(completion: @escaping (String?) -> Void) {
@@ -201,31 +196,4 @@ final class AppModel: ObservableObject {
             self.vpnConnection(start: false)
         }
     }
-
-    // public func toggleConnection() {
-    //     loading = true
-    //     let parameters: [String: String] = [
-    //         // "_redirect": "vpn-client.asp",
-    //         // "_sleep": "3",
-    //         "_http_id": httpID,
-    //         "_service": self.connected ? "vpnclient1-stop" : "vpnclient1-start"
-    //     ]
-    //     session.request(routerURL + togglePath, method: .post, parameters: parameters)
-    //         .authenticate(username: username, password: password)
-    //         .responseString { response in
-    //             debugPrint(response)
-    //
-    //             switch response.result {
-    //             case .success:
-    //                 let statusCode = response.response?.statusCode
-    //                 if statusCode == 302 {
-    //                     self.connected = !self.connected
-    //                 }
-    //             case .failure:
-    //                 debugPrint("Error")
-    //             }
-    //             self.loading = false
-    //         }
-    // }
-
 }
