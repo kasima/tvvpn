@@ -11,36 +11,47 @@ struct ContentView: View {
     @EnvironmentObject var appModel: AppModel
 
     var body: some View {
-        VStack {
-            HStack {
-                Image(systemName: "tv")
-                Text("TV VPN")
-            }
-            .font(.largeTitle)
-            .fontWeight(.bold)
-            .padding()
+        ZStack {
+            Color(UIColor.systemGray6)
+                .edgesIgnoringSafeArea(.all)
 
-            Spacer()
-            
-            if appModel.loading {
-                ProgressView()
-                    .frame(minHeight: 100)
-            } else {
-                Image(systemName: appModel.connected ? "checkmark.icloud.fill" : "icloud.slash")
-                    .font(.system(size: 60))
-                    .frame(minHeight: 100)
+            VStack {
+                HStack {
+                    Image(systemName: "tv")
+                    Text("TV VPN")
+                }
+                .font(.largeTitle)
+                .fontWeight(.bold)
+                .padding()
+
+                Spacer()
+
+                if appModel.loading {
+                    ProgressView()
+                        .frame(minHeight: 100)
+                } else {
+                    Image(systemName: appModel.connected ? "checkmark.icloud.fill" : "icloud.slash")
+                        .font(.system(size: 60))
+                        .frame(minHeight: 100)
+                }
+
+                Button(action: {
+                    appModel.toggleConnection()
+                }) {
+                    Text(appModel.connected ? "Disconnect from 🇨🇭" : "Connect to 🇨🇭")
+                        .font(.title)
+                        //                    .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.accentColor)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                        .fontWeight(.bold)
+                }
+                .padding()
+                .disabled(appModel.loading)
+                Spacer()
             }
-            
-            Button {
-                appModel.toggleConnection()
-            } label: {
-                Text(appModel.connected ? "Disconnect from 🇨🇭" : "Connect to 🇨🇭")
-                    .font(.title)
-            }
-            .disabled(appModel.loading)
-            Spacer()
         }
-        .preferredColorScheme(.dark)
     }
 }
 

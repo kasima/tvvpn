@@ -56,7 +56,7 @@ final class AppModel: ObservableObject {
     
     public func getStatus() {
         let parameters: [String: String] = [
-            // TODO – pull this session ID from somewhere
+            // TODO – pull this session ID from the source in the script section: nvram["_http_id"]
             "_http_id": "TIDedd63e08e80c7be2",
             "client": "1"
         ]
@@ -107,4 +107,5 @@ final class AppModel: ObservableObject {
                 self.loading = false
             }
     }
+
 }
