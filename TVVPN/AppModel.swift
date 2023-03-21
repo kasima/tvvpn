@@ -46,7 +46,7 @@ final class AppModel: ObservableObject {
         Task { @MainActor in
             do {
                 self.connected = try await getStatus()
-                self.serverAddress = try await getServer()
+                self.serverAddress = try await getCurrentServer()
             } catch {
                 debugPrint("Error: \(error)")
 
@@ -93,7 +93,7 @@ final class AppModel: ObservableObject {
         }
     }
 
-    public func getServer() async throws -> String {
+    public func getCurrentServer() async throws -> String {
         let parameters: [String: String] = [
             "_http_id": httpID,
             "action": "execute",
@@ -110,90 +110,81 @@ final class AppModel: ObservableObject {
         return response.value ?? ""
     }
 
-    public func getSuggestedServer(completion: @escaping (String?) -> Void) {
+    public func getSuggestedServer() async throws -> String {
         let url = "https://api.nordvpn.com/v1/servers/recommendations?filters[country_id]=\(countryId)&limit=1"
-        AF.request(url).responseData { response in
-            switch response.result {
-            case .success(let data):
-                do {
-                    if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]],
-                       let serverAddress = json.first?["hostname"] as? String {
-                        completion(serverAddress)
-                    } else {
-                        completion(nil)
-                    }
-                } catch {
-                    completion(nil)
-                }
-            case .failure:
-                completion(nil)
+        let request = AF.request(url).serializingData()
+        let response = await request.response
+        switch response.result {
+        case .success(let data):
+            if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]],
+               let serverAddress = json.first?["hostname"] as? String {
+                return serverAddress
+            } else {
+                return ""
             }
+        case .failure:
+            return ""
         }
     }
 
-    public func updateVPNClientAddress(serverAddress: String, completion: @escaping (Bool) -> Void) {
-        // Replace this with the appropriate API call to update the server address for the VPN client
+    public func updateVPNClientAddress(serverAddress: String) async throws {
         let url = routerURL + nvramUpdatePath
         let parameters: [String: String] = [
             "_ajax": "1",
             "vpn_client1_addr": serverAddress,
             "_http_id": httpID
         ]
-        session.request(url, method: .post, parameters: parameters)
+        let request = session.request(url, method: .post, parameters: parameters)
             .authenticate(username: username, password: password)
-            .response { response in
-                if response.error == nil {
-                    completion(true)
-                } else {
-                    completion(false)
-                }
-            }
+            .serializingData()
+        let response = await request.response
+        switch response.result {
+        case .success:
+            print("Successfully updated")
+        case .failure:
+            throw NSError(domain: "getVPNClientParameters", code: -1, userInfo: nil)
+        }
     }
 
-    public func vpnConnection(start: Bool) {
+    public func vpnConnection(start: Bool) async throws -> Bool {
         let toggleParameters: [String: String] = [
             "_http_id": httpID,
             "_service": start ? "vpnclient1-start" : "vpnclient1-stop"
         ]
-        session.request(routerURL + togglePath, method: .post, parameters: toggleParameters)
+        let request = session.request(routerURL + togglePath, method: .post, parameters: toggleParameters)
             .authenticate(username: username, password: password)
-            .responseString { response in
-                debugPrint(response)
+            .serializingString()
+        let response = await request.response
+        debugPrint(response)
 
-                switch response.result {
-                case .success:
-                    let statusCode = response.response?.statusCode
-                    if statusCode == 302 {
-                        self.connected = !self.connected
-                    }
-                case .failure:
-                    debugPrint("Error")
-                }
-                self.loading = false
+        switch response.result {
+        case .success:
+            let statusCode = response.response?.statusCode
+            if statusCode == 302 {
+                return true
             }
+        case .failure:
+            debugPrint("Error")
+        }
+        return false
     }
 
     public func toggleConnection() {
         loading = true
-        if !connected {
-            getSuggestedServer { serverAddress in
-                guard let serverAddress = serverAddress else {
-                    debugPrint("Error fetching suggested server")
-                    self.loading = false
-                    return
+
+        Task { @MainActor in
+            do {
+                if !connected {
+                    self.serverAddress = try await self.getSuggestedServer()
+                    try await self.updateVPNClientAddress(serverAddress: self.serverAddress)
+                    self.connected = try await self.vpnConnection(start: true)
+                } else {
+                    self.connected = try await !self.vpnConnection(start: false)
                 }
-                self.serverAddress = serverAddress
-                self.updateVPNClientAddress(serverAddress: serverAddress) { success in
-                    if success {
-                        self.vpnConnection(start: true)
-                    } else {
-                        debugPrint("Error updating server address")
-                        self.loading = false
-                    }
-                }
+            } catch {
+                debugPrint(error)
             }
-        } else {
-            self.vpnConnection(start: false)
+            self.loading = false
         }
     }
 }
