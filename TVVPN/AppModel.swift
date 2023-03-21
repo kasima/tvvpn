@@ -42,7 +42,6 @@ final class AppModel: ObservableObject {
     public func loadStuff() {
         loadPassword()
         getStatus()
-        getServer()
     }
 
     private func loadPassword() {
@@ -81,6 +80,7 @@ final class AppModel: ObservableObject {
                     if statusCode == 200 {
                         // When VPN is not connected, response is nil body
                         self.connected = data != nil
+                        self.getServer()
                     } else {
                         self.connected = false
                     }

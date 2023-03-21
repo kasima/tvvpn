@@ -28,11 +28,13 @@ struct ContentView: View {
 
                 if appModel.loading {
                     ProgressView()
-                        .frame(minHeight: 100)
+                        .frame(height: 100)
+                    Text("Doing stuff...")
+                        .font(.caption)
                 } else {
                     Image(systemName: appModel.connected ? "checkmark.icloud.fill" : "icloud.slash")
                         .font(.system(size: 60))
-                        .frame(minHeight: 100)
+                        .frame(height: 100)
 
                     if appModel.connected {
                         if appModel.serverAddress == "" {
@@ -53,7 +55,7 @@ struct ContentView: View {
                 }) {
                     Text(appModel.connected ? "Disconnect from 🇨🇭" : "Connect to 🇨🇭")
                         .font(.title)
-                        //                    .frame(maxWidth: .infinity)
+                        // .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color.accentColor)
                         .foregroundColor(.white)
@@ -62,6 +64,7 @@ struct ContentView: View {
                 }
                 .padding()
                 .disabled(appModel.loading)
+
                 Spacer()
             }
         }
